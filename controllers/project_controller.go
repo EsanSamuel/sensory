@@ -1,0 +1,52 @@
+package controllers
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"log"
+	"net/http"
+	"time"
+
+	"github.com/EsanSamuel/sensory/db"
+	"github.com/EsanSamuel/sensory/models"
+	"github.com/gin-gonic/gin"
+)
+
+func GenerateApiKey() string {
+	b := make([]byte, 32)
+	_, err := rand.Read(b)
+	if err != nil {
+		log.Println("Error generating key")
+		return ""
+	}
+
+	return hex.EncodeToString(b)
+}
+func CreateProject() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		var project models.Project
+
+		if err := c.ShouldBindJSON(&project); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		}
+
+		api_key := GenerateApiKey()
+
+		project.ApiKey = api_key
+		project.CreatedAt = time.Now()
+		project.UpdatedAt = time.Now()
+
+		result, err := db.ProjectCollection.InsertOne(ctx, project)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "message": err})
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"project": result})
+	}
+
+}

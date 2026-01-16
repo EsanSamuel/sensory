@@ -1,16 +1,19 @@
 package logClient
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
-func (c *Client) INFO(msg string) {
-	c.Send("INFO", msg)
+func (c *Client) INFO(msg any) {
+	c.Send("INFO", fmt.Sprint(msg))
 }
 
-func (c *Client) ERROR(msg string) {
-	c.Send("ERROR", msg)
+func (c *Client) ERROR(msg any) {
+	c.Send("ERROR", fmt.Sprint(msg))
 }
 
-func (c *Client) FATAL(msg string) {
-	c.Send("FATAL", msg)
+func (c *Client) FATAL(msg any) {
+	c.Send("FATAL", fmt.Sprint(msg))
 	os.Exit(1)
 }
