@@ -19,6 +19,7 @@ type Client struct {
 	ApiKey    string
 	ProjectId string
 	UserId    string
+	noOp      bool // flag to mark dummy client
 }
 
 type LogEntry struct {
@@ -39,10 +40,7 @@ func New(apikey, addr string) (*Client, error) {
 	defer cancel()
 
 	var project models.Project
-	err = db.ProjectCollection.FindOne(
-		ctx,
-		bson.M{"api_key": apikey},
-	).Decode(&project)
+	err = db.ProjectCollection.FindOne(ctx, bson.M{"api_key": apikey}).Decode(&project)
 	if err != nil {
 		conn.Close()
 		return nil, err
@@ -55,10 +53,20 @@ func New(apikey, addr string) (*Client, error) {
 		ApiKey:    apikey,
 		ProjectId: project.ProjectID,
 		UserId:    project.UserID,
+		noOp:      false,
 	}, nil
 }
 
-func (c *Client) Send(level string, msg string) error {
+func NewNoOp() *Client {
+	return &Client{noOp: true}
+}
+
+func (c *Client) Send(level, msg string) error {
+	if c == nil || c.noOp {
+		fmt.Println("[noop logger]", level, msg)
+		return nil
+	}
+
 	entry := LogEntry{
 		Level:     level,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
@@ -72,36 +80,44 @@ func (c *Client) Send(level string, msg string) error {
 	data, err := json.Marshal(entry)
 	if err != nil {
 		fmt.Println(err)
+		return err
 	}
 
 	data = append(data, '\n')
-	_, err = c.conn.Write(data)
-	if err != nil {
-		fmt.Println(err)
+	if c.conn != nil {
+		_, err = c.conn.Write(data)
+		if err != nil {
+			fmt.Println("TCP write failed:", err)
+		}
 	}
 	return err
 }
 
 func PushLogToDB(entry LogEntry, c *Client) {
-	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-	defer cancel()
-
-	var log models.Log
-
-	log.LogID = bson.NewObjectID().Hex()
-	log.Level = entry.Level
-	log.Message = entry.Message
-	log.Service = entry.Service
-	log.TimeStamp = entry.Timestamp
-	log.ProjectID = c.ProjectId
-	log.UserID = c.UserId
-	log.CreatedAt = time.Now()
-	log.UpdatedAt = time.Now()
-
-	result, err := db.LogCollection.InsertOne(ctx, log)
-	if err != nil {
-		fmt.Println(err)
+	if c == nil || c.noOp {
+		return
 	}
 
-	fmt.Println("saved log: ", result)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	logEntry := models.Log{
+		LogID:     bson.NewObjectID().Hex(),
+		Level:     entry.Level,
+		Message:   entry.Message,
+		Service:   entry.Service,
+		TimeStamp: entry.Timestamp,
+		ProjectID: c.ProjectId,
+		UserID:    c.UserId,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	result, err := db.LogCollection.InsertOne(ctx, logEntry)
+	if err != nil {
+		fmt.Println("DB insert error:", err)
+		return
+	}
+
+	fmt.Println("saved log:", result)
 }
