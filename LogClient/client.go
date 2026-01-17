@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"time"
 
@@ -14,10 +13,12 @@ import (
 )
 
 type Client struct {
-	conn    net.Conn
-	Project string
-	Service string
-	ApiKey  string
+	conn      net.Conn
+	Project   string
+	Service   string
+	ApiKey    string
+	ProjectId string
+	UserId    string
 }
 
 type LogEntry struct {
@@ -31,22 +32,30 @@ type LogEntry struct {
 func New(apikey, addr string) (*Client, error) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		log.Printf("Warning: Failed to connect to log server: %v", err)
 		return nil, err
 	}
 
-	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var project models.Project
-
-	err = db.ProjectCollection.FindOne(ctx, bson.M{"api_key": apikey}).Decode(&project)
+	err = db.ProjectCollection.FindOne(
+		ctx,
+		bson.M{"api_key": apikey},
+	).Decode(&project)
 	if err != nil {
-		log.Println("Cannot find project", err)
+		conn.Close()
 		return nil, err
 	}
 
-	return &Client{conn: conn, Project: project.ProjectName, Service: project.Service, ApiKey: apikey}, nil
+	return &Client{
+		conn:      conn,
+		Project:   project.ProjectName,
+		Service:   project.Service,
+		ApiKey:    apikey,
+		ProjectId: project.ProjectID,
+		UserId:    project.UserID,
+	}, nil
 }
 
 func (c *Client) Send(level string, msg string) error {
@@ -57,6 +66,8 @@ func (c *Client) Send(level string, msg string) error {
 		Service:   c.Service,
 		Message:   msg,
 	}
+
+	PushLogToDB(entry, c)
 
 	data, err := json.Marshal(entry)
 	if err != nil {
@@ -69,4 +80,28 @@ func (c *Client) Send(level string, msg string) error {
 		fmt.Println(err)
 	}
 	return err
+}
+
+func PushLogToDB(entry LogEntry, c *Client) {
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	var log models.Log
+
+	log.LogID = bson.NewObjectID().Hex()
+	log.Level = entry.Level
+	log.Message = entry.Message
+	log.Service = entry.Service
+	log.TimeStamp = entry.Timestamp
+	log.ProjectID = c.ProjectId
+	log.UserID = c.UserId
+	log.CreatedAt = time.Now()
+	log.UpdatedAt = time.Now()
+
+	result, err := db.ProjectCollection.InsertOne(ctx, log)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("saved log: ", result)
 }

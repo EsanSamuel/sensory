@@ -11,6 +11,7 @@ import (
 	"github.com/EsanSamuel/sensory/db"
 	"github.com/EsanSamuel/sensory/models"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func GenerateApiKey() string {
@@ -36,6 +37,7 @@ func CreateProject() gin.HandlerFunc {
 
 		api_key := GenerateApiKey()
 
+		project.ProjectID = bson.NewObjectID().Hex()
 		project.ApiKey = api_key
 		project.CreatedAt = time.Now()
 		project.UpdatedAt = time.Now()

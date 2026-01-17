@@ -62,6 +62,12 @@ func handleConn(conn net.Conn) {
 		line := scanner.Text()
 		fmt.Println("Received log:", line)
 
+		var entry Log
+		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			fmt.Println(err)
+			continue
+		}
+
 		logPath := filepath.Join(serviceDir, serviceLogFile)
 		f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
@@ -155,5 +161,3 @@ func writeLog(logPath, line string) {
 
 	f.Close()
 }
-
-func PushLogToDB()

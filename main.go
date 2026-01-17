@@ -17,6 +17,7 @@ func main() {
 	if err != nil {
 		fmt.Println(".env file not found!")
 	}
+
 	r := gin.Default()
 
 	r.GET("/hello", func(c *gin.Context) {
@@ -34,5 +35,4 @@ func main() {
 	}()
 
 	logserver.Initialize_Log()
-
 }
