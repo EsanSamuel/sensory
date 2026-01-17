@@ -79,7 +79,7 @@ func NewNoOp() *Client {
 }
 
 func getLocation() (file string, line int, function string) {
-	pc, file, line, ok := runtime.Caller(2)
+	pc, file, line, ok := runtime.Caller(3)
 
 	if !ok {
 		return "unknown", 0, "unknown"
