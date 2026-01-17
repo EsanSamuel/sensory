@@ -9,8 +9,11 @@ import (
 	"github.com/joho/godotenv"
 
 	logserver "github.com/EsanSamuel/sensory/LogServer"
+	"github.com/EsanSamuel/sensory/config"
 	"github.com/EsanSamuel/sensory/controllers"
 )
+
+var logger = config.Logger
 
 func main() {
 	err := godotenv.Load(".env")
@@ -29,7 +32,7 @@ func main() {
 	r.POST("project", controllers.CreateProject())
 
 	go func() {
-		if err := r.Run(":8080"); err != nil {
+		if err := r.Run(":8000"); err != nil {
 			log.Fatal("Error starting server", err)
 		}
 	}()

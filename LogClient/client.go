@@ -98,7 +98,7 @@ func PushLogToDB(entry LogEntry, c *Client) {
 	log.CreatedAt = time.Now()
 	log.UpdatedAt = time.Now()
 
-	result, err := db.ProjectCollection.InsertOne(ctx, log)
+	result, err := db.LogCollection.InsertOne(ctx, log)
 	if err != nil {
 		fmt.Println(err)
 	}

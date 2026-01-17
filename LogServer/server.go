@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/EsanSamuel/sensory/config"
 )
 
 type Log struct {
@@ -23,6 +25,8 @@ const serviceLogFile = "service.log"
 const errorLogFile = "error.log"
 const infoLogFile = "info.log"
 const fatalLogFile = "fatal.log"
+
+var logger = config.Logger
 
 func Initialize_Log() {
 	l, err := net.Listen("tcp", ":9000")
@@ -61,6 +65,7 @@ func handleConn(conn net.Conn) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		fmt.Println("Received log:", line)
+		logger.INFO(line)
 
 		var entry Log
 		if err := json.Unmarshal([]byte(line), &entry); err != nil {
