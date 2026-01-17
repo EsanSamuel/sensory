@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"runtime"
 	"time"
@@ -65,7 +66,10 @@ func New(apikey, addr string) (*Client, error) {
 		noOp:      false,
 	}
 
-	helpers.SaveProjectMeta(client.Project, client.ProjectId, client.UserId)
+	err = helpers.SaveProjectMeta(client.Project, client.ProjectId, client.UserId)
+	if err != nil {
+		log.Println(err)
+	}
 
 	return client, nil
 }
