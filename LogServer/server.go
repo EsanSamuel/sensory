@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/EsanSamuel/sensory/config"
+	"github.com/EsanSamuel/sensory/helpers"
 )
 
 type Log struct {
@@ -18,6 +19,8 @@ type Log struct {
 	Message   string `json:"message"`
 	Service   string `json:"service"`
 	Project   string `json:"project"`
+	ProjectID string `json:"project_id"`
+	UserID    string `json:"user_id"`
 }
 
 const serviceDir = "services"
@@ -25,8 +28,6 @@ const serviceLogFile = "service.log"
 const errorLogFile = "error.log"
 const infoLogFile = "info.log"
 const fatalLogFile = "fatal.log"
-
-var logger = config.Logger
 
 func Initialize_Log() {
 	l, err := net.Listen("tcp", ":9000")
@@ -65,7 +66,6 @@ func handleConn(conn net.Conn) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		fmt.Println("Received log:", line)
-		logger.INFO(line)
 
 		var entry Log
 		if err := json.Unmarshal([]byte(line), &entry); err != nil {
@@ -95,7 +95,7 @@ func handleConn(conn net.Conn) {
 func ProcessLog() {
 	logPath := filepath.Join(serviceDir, serviceLogFile)
 
-	//file, err := os.ReadFile(logPath)
+	file, err := os.ReadFile(logPath)
 	src, err := os.Open(logPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -122,11 +122,24 @@ func ProcessLog() {
 		//timeFormat := Time[0]
 		//fmt.Println(timeFormat)
 
+		data, err := os.ReadFile(".sensory.json")
+		if err != nil {
+			log.Println("err reading ", err)
+		}
+
+		var project helpers.ProjectMeta
+
+		if err := json.Unmarshal(data, &project); err != nil {
+			log.Println(err)
+		}
+
 		LogData[entry.Level] = append(LogData[entry.Level], Log{
-			Project:   entry.Project,
+			Project:   project.ProjectName,
 			TimeStamp: entry.TimeStamp,
 			Message:   entry.Message,
 			Service:   entry.Service,
+			ProjectID: project.ProjectId,
+			UserID:    project.UserId,
 		})
 
 		switch entry.Level {
@@ -144,13 +157,13 @@ func ProcessLog() {
 
 	}
 
-	/*fmt.Println("Error Logs: ", LogData["ERROR"])
+	fmt.Println("Error Logs: ", LogData["ERROR"])
 	fmt.Println("Info Logs: ", LogData["INFO"])
 	fmt.Println("Fatal Logs: ", LogData["FATAL"])
 
 	fmt.Println("\n--- Existing Logs ---")
 	fmt.Println(string(file))
-	fmt.Printf("--- End of Logs ---\n")*/
+	fmt.Printf("--- End of Logs ---\n")
 }
 
 func writeLog(logPath, line string) {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/EsanSamuel/sensory/db"
+	"github.com/EsanSamuel/sensory/helpers"
 	"github.com/EsanSamuel/sensory/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -46,7 +47,7 @@ func New(apikey, addr string) (*Client, error) {
 		return nil, err
 	}
 
-	return &Client{
+	client := &Client{
 		conn:      conn,
 		Project:   project.ProjectName,
 		Service:   project.Service,
@@ -54,7 +55,11 @@ func New(apikey, addr string) (*Client, error) {
 		ProjectId: project.ProjectID,
 		UserId:    project.UserID,
 		noOp:      false,
-	}, nil
+	}
+
+	helpers.SaveProjectMeta(client.Project, client.ProjectId, client.UserId)
+
+	return client, nil
 }
 
 func NewNoOp() *Client {
