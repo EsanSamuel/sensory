@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"runtime"
 	"time"
 
 	"github.com/EsanSamuel/sensory/db"
@@ -23,12 +24,19 @@ type Client struct {
 	noOp      bool // flag to mark dummy client
 }
 
+type Runtime struct {
+	File string `json:"file"`
+	Line int    `json:"line"`
+	Fn   string `json:"fn"`
+}
+
 type LogEntry struct {
-	Level     string `json:"level"`
-	Timestamp string `json:"timestamp"`
-	Project   string `json:"project"`
-	Service   string `json:"service"`
-	Message   string `json:"message"`
+	Level     string  `json:"level"`
+	Timestamp string  `json:"timestamp"`
+	Project   string  `json:"project"`
+	Service   string  `json:"service"`
+	Message   string  `json:"message"`
+	Runtime   Runtime `json:"runtime"`
 }
 
 func New(apikey, addr string) (*Client, error) {
@@ -66,11 +74,27 @@ func NewNoOp() *Client {
 	return &Client{noOp: true}
 }
 
+func getLocation() (file string, line int, function string) {
+	pc, file, line, ok := runtime.Caller(1)
+
+	if !ok {
+		return "unknown", 0, "unknown"
+	}
+
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return file, line, "unknown"
+	}
+	return file, line, fn.Name()
+}
+
 func (c *Client) Send(level, msg string) error {
 	if c == nil || c.noOp {
 		fmt.Println("[noop logger]", level, msg)
 		return nil
 	}
+
+	file, line, fn := getLocation()
 
 	entry := LogEntry{
 		Level:     level,
@@ -78,6 +102,11 @@ func (c *Client) Send(level, msg string) error {
 		Project:   c.Project,
 		Service:   c.Service,
 		Message:   msg,
+		Runtime: Runtime{
+			File: file,
+			Line: line,
+			Fn:   fn,
+		},
 	}
 
 	PushLogToDB(entry, c)
@@ -114,6 +143,11 @@ func PushLogToDB(entry LogEntry, c *Client) {
 		TimeStamp: entry.Timestamp,
 		ProjectID: c.ProjectId,
 		UserID:    c.UserId,
+		Runtime: models.Runtime{
+			File: entry.Runtime.File,
+			Line: entry.Runtime.Line,
+			Fn:   entry.Runtime.Fn,
+		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

@@ -17,6 +17,12 @@ type Project struct {
 	UpdatedAt   time.Time     `json:"updated_at" bson:"updated_at"`
 }
 
+type Runtime struct {
+	File string `json:"file" bson:"file"`
+	Line int    `json:"line" bson:"line"`
+	Fn   string `json:"fn" bson:"fn"`
+}
+
 type Log struct {
 	ID        bson.ObjectID `json:"_id" bson:"_id,omitempty"`
 	LogID     string        `json:"log_id" bson:"log_id"`
@@ -26,6 +32,7 @@ type Log struct {
 	TimeStamp string        `json:"timestamp" bson:"timestamp"`
 	Message   string        `json:"message" bson:"message"`
 	Service   string        `json:"service" bson:"service"`
+	Runtime   Runtime       `json:"runtime" bson:"runtime"`
 
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
