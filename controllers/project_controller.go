@@ -35,10 +35,7 @@ func CreateProject() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		}
 
-		api_key := GenerateApiKey()
-
 		project.ProjectID = bson.NewObjectID().Hex()
-		project.ApiKey = api_key
 		project.CreatedAt = time.Now()
 		project.UpdatedAt = time.Now()
 
@@ -49,6 +46,32 @@ func CreateProject() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, gin.H{"project": result})
+	}
+
+}
+
+func GenerateProjectApiKey() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		projectId := c.Param("projectId")
+		api_key := GenerateApiKey()
+
+		updateApiKey := bson.M{
+			"$set": bson.M{
+				"api_key":    api_key,
+				"updated_at": time.Now(),
+			},
+		}
+
+		result, err := db.ProjectCollection.UpdateOne(ctx, bson.M{"project_id": projectId}, updateApiKey)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating apikey", "message": err})
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"apikey": result})
+
 	}
 
 }

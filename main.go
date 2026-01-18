@@ -30,6 +30,7 @@ func main() {
 	r.POST("/register", controllers.RegisterUser())
 	r.GET("/user/:userId", controllers.GetUser())
 	r.POST("project", controllers.CreateProject())
+	r.POST("/project/api_key/:projectId", controllers.GenerateProjectApiKey())
 
 	go func() {
 		if err := r.Run(":8000"); err != nil {
