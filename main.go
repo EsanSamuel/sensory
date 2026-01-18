@@ -9,11 +9,8 @@ import (
 	"github.com/joho/godotenv"
 
 	logserver "github.com/EsanSamuel/sensory/LogServer"
-	"github.com/EsanSamuel/sensory/config"
 	"github.com/EsanSamuel/sensory/controllers"
 )
-
-var logger = config.Logger
 
 func main() {
 	err := godotenv.Load(".env")
@@ -31,6 +28,9 @@ func main() {
 	r.GET("/user/:userId", controllers.GetUser())
 	r.POST("project", controllers.CreateProject())
 	r.POST("/project/api_key/:projectId", controllers.GenerateProjectApiKey())
+	r.GET("/logs/:userId", controllers.GetLogs())
+	r.GET("/logs/level/:userId", controllers.FilterLogs())
+	r.GET("log/:logId", controllers.GetLogById())
 
 	go func() {
 		if err := r.Run(":8000"); err != nil {
