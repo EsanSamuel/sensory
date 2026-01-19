@@ -53,6 +53,7 @@ func New(apikey, addr string) (*Client, error) {
 	err = db.ProjectCollection.FindOne(ctx, bson.M{"api_key": apikey}).Decode(&project)
 	if err != nil {
 		conn.Close()
+		log.Println("Invalid api_key")
 		return nil, err
 	}
 
