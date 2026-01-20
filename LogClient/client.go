@@ -163,5 +163,9 @@ func PushLogToDB(entry LogEntry, c *Client) {
 		return
 	}
 
+	if result.Acknowledged {
+		db.ProjectCollection.UpdateOne(ctx, bson.M{"project_id": c.ProjectId}, bson.M{"$inc": bson.M{"log_counts": 1}})
+	}
+
 	fmt.Println("saved log:", result)
 }

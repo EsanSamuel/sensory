@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -21,16 +22,19 @@ func RegisterUser() gin.HandlerFunc {
 
 		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			return
 		}
 
 		countUsers, err := db.UserCollection.CountDocuments(ctx, bson.M{"email": user.Email})
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error ": "error counting document", "details": err})
+			return
 		}
 
 		if countUsers > 0 {
 			c.JSON(http.StatusConflict, gin.H{"message": "User already exists!", "error": err})
+			return
 		}
 
 		user.CreatedAt = time.Now()
@@ -40,6 +44,7 @@ func RegisterUser() gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "message": err})
+			return
 		}
 
 		c.JSON(http.StatusCreated, gin.H{"user": result})
@@ -59,7 +64,9 @@ func GetUser() gin.HandlerFunc {
 		err := db.UserCollection.FindOne(ctx, bson.M{"user_id": userId}).Decode(&user)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Error finding user", "detail": err})
+			return
 		}
+		fmt.Print(user)
 
 		c.JSON(http.StatusOK, gin.H{"user": user})
 	}

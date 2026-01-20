@@ -36,12 +36,13 @@ func main() {
 	})
 
 	r.POST("/register", controllers.RegisterUser())
+	r.POST("/project", controllers.CreateProject())
 	r.GET("/user/:userId", controllers.GetUser())
-	r.POST("project", controllers.CreateProject())
+	r.GET("/projects/:userId", controllers.GetProjects())
 	r.POST("/project/api_key/:projectId", controllers.GenerateProjectApiKey())
 	r.GET("/logs/:userId", controllers.GetLogs())
 	r.GET("/logs/level/:userId", controllers.FilterLogs())
-	r.GET("log/:logId", controllers.GetLogById())
+	r.GET("/log/:logId", controllers.GetLogById())
 
 	go func() {
 		if err := r.Run(":8000"); err != nil {
