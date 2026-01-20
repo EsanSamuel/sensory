@@ -35,6 +35,7 @@ type Log struct {
 	Message   string        `json:"message" bson:"message"`
 	Service   string        `json:"service" bson:"service"`
 	Runtime   Runtime       `json:"runtime" bson:"runtime"`
+	Project   Project       `json:"project" bson:"project"`
 
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`

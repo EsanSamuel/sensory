@@ -39,10 +39,12 @@ func main() {
 	r.POST("/project", controllers.CreateProject())
 	r.GET("/user/:userId", controllers.GetUser())
 	r.GET("/projects/:userId", controllers.GetProjects())
+	r.GET("/project/:projectId", controllers.GetProject())
 	r.POST("/project/api_key/:projectId", controllers.GenerateProjectApiKey())
 	r.GET("/logs/:userId", controllers.GetLogs())
 	r.GET("/logs/level/:userId", controllers.FilterLogs())
 	r.GET("/log/:logId", controllers.GetLogById())
+	r.GET("/logs/project/:projectId", controllers.GetLogsByProject())
 
 	go func() {
 		if err := r.Run(":8000"); err != nil {

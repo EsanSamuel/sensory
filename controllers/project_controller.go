@@ -118,3 +118,21 @@ func GetProjects() gin.HandlerFunc {
 
 	}
 }
+
+func GetProject() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		projectId := c.Param("projectId")
+		var project models.Project
+
+		err := db.ProjectCollection.FindOne(ctx, bson.M{"project_id": projectId}).Decode(&project)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "fetching products failed", "details": err.Error()})
+		}
+
+		c.JSON(http.StatusOK, project)
+
+	}
+}
