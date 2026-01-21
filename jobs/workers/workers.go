@@ -23,10 +23,10 @@ func NewRedisPool(addr string) *redis.Pool {
 
 var redisPool *redis.Pool = NewRedisPool(":6379")
 
-func SendEmailQueue(email string, userId string) {
+func SendEmailQueue(email string, userId string, logId string) {
 	var enqueuer = work.NewEnqueuer("emailQueue", redisPool)
 
-	_, err := enqueuer.Enqueue("send_email", work.Q{"email_addr": email, "user_id": userId})
+	_, err := enqueuer.Enqueue("send_email", work.Q{"email_addr": email, "user_id": userId, "log_id": logId})
 
 	if err != nil {
 		fmt.Println("Error queuing email", err.Error())

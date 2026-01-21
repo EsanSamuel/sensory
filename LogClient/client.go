@@ -11,6 +11,7 @@ import (
 
 	"github.com/EsanSamuel/sensory/db"
 	"github.com/EsanSamuel/sensory/helpers"
+	"github.com/EsanSamuel/sensory/jobs/workers"
 	"github.com/EsanSamuel/sensory/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -165,6 +166,16 @@ func PushLogToDB(entry LogEntry, c *Client) {
 
 	if result.Acknowledged {
 		db.ProjectCollection.UpdateOne(ctx, bson.M{"project_id": c.ProjectId}, bson.M{"$inc": bson.M{"log_counts": 1}})
+
+		var user models.User
+
+		err = db.UserCollection.FindOne(ctx, bson.M{"user_id": c.UserId}).Decode(&user)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		workers.SendEmailQueue(user.Email, user.UserID, logEntry.LogID)
 	}
 
 	fmt.Println("saved log:", result)

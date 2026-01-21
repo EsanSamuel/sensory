@@ -30,6 +30,8 @@ func (c *Context) FindUser(job *work.Job, next work.NextMiddlewareFunc) error {
 	if _, ok := job.Args["user_id"]; ok {
 		c.Email = job.ArgString("email_addr")
 		c.UserId = job.ArgString("user_id")
+		c.LogId = job.ArgString("log_id")
+		fmt.Println("LogId: ", c.LogId)
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
@@ -50,10 +52,6 @@ func (c *Context) FindUser(job *work.Job, next work.NextMiddlewareFunc) error {
 func (c *Context) SendEmail(job *work.Job) error {
 	email := c.Email
 	log := c.LogData
-
-	if log.Level != "ERROR" && log.Level != "WARN" {
-		return nil
-	}
 
 	RESEND_API_KEY := os.Getenv("RESEND_API_KEY")
 	if RESEND_API_KEY == "" {
@@ -113,7 +111,7 @@ func (c *Context) SendEmail(job *work.Job) error {
 	)
 
 	params := &resend.SendEmailRequest{
-		From:    "Log Tracker <alerts@mikaelsoninitiative.org>",
+		From:    "Sensory <noreply@mikaelsoninitiative.org>",
 		To:      []string{email},
 		Subject: subject,
 		Html:    html,
@@ -121,6 +119,7 @@ func (c *Context) SendEmail(job *work.Job) error {
 
 	sent, err := client.Emails.Send(params)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 

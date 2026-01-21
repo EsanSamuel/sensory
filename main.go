@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -12,6 +15,7 @@ import (
 
 	logserver "github.com/EsanSamuel/sensory/LogServer"
 	"github.com/EsanSamuel/sensory/controllers"
+	"github.com/EsanSamuel/sensory/jobs/workers"
 )
 
 func main() {
@@ -21,6 +25,8 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	go workers.EmailWorker()
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
@@ -53,4 +59,10 @@ func main() {
 	}()
 
 	logserver.Initialize_Log()
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+	<-signalChan
+
+	workers.StopEmailWorker()
 }
