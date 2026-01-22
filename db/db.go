@@ -10,7 +10,7 @@ import (
 
 func ConnectDB() *mongo.Client {
 
-	mongodb_uri := os.Getenv("mongodb_uri")
+	mongodb_uri := os.Getenv("MONGODB_URI")
 
 	if mongodb_uri == "" {
 		fmt.Println("Mongodb uri is empty")
@@ -34,7 +34,7 @@ var client *mongo.Client = ConnectDB()
 
 func CollectionName(collectionName string) *mongo.Collection {
 
-	database_name := os.Getenv("database_name")
+	database_name := os.Getenv("DATABASE_NAME")
 
 	if database_name == "" {
 		fmt.Println("Database name is empty")
