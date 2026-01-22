@@ -1,6 +1,6 @@
 module github.com/EsanSamuel/sensory
 
-go 1.25.5
+go 1.25
 
 require (
 	cloud.google.com/go v0.116.0 // indirect
