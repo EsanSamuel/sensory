@@ -11,7 +11,6 @@ import (
 
 	"github.com/EsanSamuel/sensory/db"
 	"github.com/EsanSamuel/sensory/helpers"
-	"github.com/EsanSamuel/sensory/jobs/workers"
 	"github.com/EsanSamuel/sensory/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -24,21 +23,6 @@ type Client struct {
 	ProjectId string
 	UserId    string
 	noOp      bool // flag to mark dummy client
-}
-
-type Runtime struct {
-	File string `json:"file"`
-	Line int    `json:"line"`
-	Fn   string `json:"fn"`
-}
-
-type LogEntry struct {
-	Level     string  `json:"level"`
-	Timestamp string  `json:"timestamp"`
-	Project   string  `json:"project"`
-	Service   string  `json:"service"`
-	Message   string  `json:"message"`
-	Runtime   Runtime `json:"runtime"`
 }
 
 func New(apikey, addr string) (*Client, error) {
@@ -102,20 +86,19 @@ func (c *Client) Send(level, msg string) error {
 
 	file, line, fn := getLocation()
 
-	entry := LogEntry{
+	entry := models.LogEntry{
 		Level:     level,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 		Project:   c.Project,
 		Service:   c.Service,
 		Message:   msg,
-		Runtime: Runtime{
+		ApiKey:    c.ApiKey,
+		Runtime: models.Runtime{
 			File: file,
 			Line: line,
 			Fn:   fn,
 		},
 	}
-
-	PushLogToDB(entry, c)
 
 	data, err := json.Marshal(entry)
 	if err != nil {
@@ -131,52 +114,4 @@ func (c *Client) Send(level, msg string) error {
 		}
 	}
 	return err
-}
-
-func PushLogToDB(entry LogEntry, c *Client) {
-	if c == nil || c.noOp {
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
-	defer cancel()
-
-	logEntry := models.Log{
-		LogID:     bson.NewObjectID().Hex(),
-		Level:     entry.Level,
-		Message:   entry.Message,
-		Service:   entry.Service,
-		TimeStamp: entry.Timestamp,
-		ProjectID: c.ProjectId,
-		UserID:    c.UserId,
-		Runtime: models.Runtime{
-			File: entry.Runtime.File,
-			Line: entry.Runtime.Line,
-			Fn:   entry.Runtime.Fn,
-		},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	result, err := db.LogCollection.InsertOne(ctx, logEntry)
-	if err != nil {
-		fmt.Println("DB insert error:", err)
-		return
-	}
-
-	if result.Acknowledged {
-		db.ProjectCollection.UpdateOne(ctx, bson.M{"project_id": c.ProjectId}, bson.M{"$inc": bson.M{"log_counts": 1}})
-
-		var user models.User
-
-		err = db.UserCollection.FindOne(ctx, bson.M{"user_id": c.UserId}).Decode(&user)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		workers.SendEmailQueue(user.Email, user.UserID, logEntry.LogID)
-	}
-
-	fmt.Println("saved log:", result)
 }

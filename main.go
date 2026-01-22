@@ -26,7 +26,7 @@ func main() {
 
 	r := gin.Default()
 
-	go workers.EmailWorker()
+	workers.EmailWorker()
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
@@ -65,4 +65,5 @@ func main() {
 	<-signalChan
 
 	workers.StopEmailWorker()
+	select {}
 }

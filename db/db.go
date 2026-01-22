@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -13,7 +14,7 @@ func ConnectDB() *mongo.Client {
 	if err != nil {
 		fmt.Println(".env file not found!")
 	}
-	mongodb_uri := "mongodb://localhost:27017/"
+	mongodb_uri := os.Getenv("mongodb_uri")
 
 	if mongodb_uri == "" {
 		fmt.Println("Mongodb uri is empty")
@@ -40,7 +41,7 @@ func CollectionName(collectionName string) *mongo.Collection {
 	if err != nil {
 		fmt.Println(".env file not found!")
 	}
-	database_name := "Sensory"
+	database_name := os.Getenv("database_name")
 
 	if database_name == "" {
 		fmt.Println("Database name is empty")

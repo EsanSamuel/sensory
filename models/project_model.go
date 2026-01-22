@@ -19,12 +19,6 @@ type Project struct {
 	UpdatedAt   time.Time     `json:"updated_at" bson:"updated_at"`
 }
 
-type Runtime struct {
-	File string `json:"file" bson:"file"`
-	Line int    `json:"line" bson:"line"`
-	Fn   string `json:"fn" bson:"fn"`
-}
-
 type Log struct {
 	ID        bson.ObjectID `json:"_id" bson:"_id,omitempty"`
 	LogID     string        `json:"log_id" bson:"log_id"`
