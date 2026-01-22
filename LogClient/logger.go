@@ -17,6 +17,10 @@ func (c *Client) WARN(msg any) {
 	c.Send("WARN", fmt.Sprint(msg))
 }
 
+func (c *Client) DEBUG(msg any) {
+	c.Send("DEBUG", fmt.Sprint(msg))
+}
+
 func (c *Client) FATAL(msg any) {
 	c.Send("FATAL", fmt.Sprint(msg))
 	os.Exit(1)

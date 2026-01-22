@@ -19,6 +19,11 @@ func GetLogs() gin.HandlerFunc {
 
 		userId := c.Param("userId")
 
+		/*page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+		perPage := 9
+
+		skip := (page - 1) * perPage*/
+
 		pipeline := mongo.Pipeline{
 			{{"$match", bson.D{
 				{"user_id", userId},
@@ -36,6 +41,7 @@ func GetLogs() gin.HandlerFunc {
 		}
 
 		cursor, err := db.LogCollection.Aggregate(ctx, pipeline)
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "aggregation failed",
@@ -81,6 +87,7 @@ func GetLogsByProject() gin.HandlerFunc {
 		}
 
 		cursor, err := db.LogCollection.Aggregate(ctx, pipeline)
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "aggregation failed",

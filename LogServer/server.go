@@ -138,7 +138,6 @@ func PushLogToDB(entry *models.LogEntry) {
 		fmt.Println("User:", user)
 
 		workers.SendEmailQueue(user.Email, user.UserID, logEntry.LogID)
-		fmt.Println("workers...")
 	}
 
 	fmt.Println("saved log:", result)
