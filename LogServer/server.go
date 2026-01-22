@@ -112,6 +112,7 @@ func PushLogToDB(entry *models.LogEntry) {
 			Line: entry.Runtime.Line,
 			Fn:   entry.Runtime.Fn,
 		},
+		Project:   project,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
