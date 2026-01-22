@@ -3,6 +3,7 @@ package workers
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/EsanSamuel/sensory/jobs"
 	"github.com/gocraft/work"
@@ -10,18 +11,19 @@ import (
 )
 
 // Redis connection
-func NewRedisPool(addr string) *redis.Pool {
+func NewRedisPool(redisURL string) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:   5,
 		MaxActive: 5,
 		Wait:      true,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", addr)
+			return redis.DialURL(redisURL)
 		},
 	}
 }
 
-var redisPool *redis.Pool = NewRedisPool(":6379")
+var RedisURL = os.Getenv("REDIS_URL")
+var redisPool *redis.Pool = NewRedisPool(RedisURL)
 
 func SendEmailQueue(email string, userId string, logId string) {
 	var enqueuer = work.NewEnqueuer("emailQueue", redisPool)
@@ -30,7 +32,7 @@ func SendEmailQueue(email string, userId string, logId string) {
 
 	if err != nil {
 		fmt.Println("Error queuing email", err.Error())
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
