@@ -20,17 +20,16 @@ type Client struct {
 	noOp      bool // flag to mark dummy client
 }
 
-func New(apikey, projectName, addr string) (*Client, error) {
+func New(apikey, addr string) (*Client, error) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
 
 	client := &Client{
-		conn:    conn,
-		Project: projectName,
-		ApiKey:  apikey,
-		noOp:    false,
+		conn:   conn,
+		ApiKey: apikey,
+		noOp:   false,
 	}
 
 	return client, nil
