@@ -4,16 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func ConnectDB() *mongo.Client {
-	err := godotenv.Load(".env")
-	if err != nil {
-		fmt.Println(".env file not found!")
-	}
+
 	mongodb_uri := os.Getenv("mongodb_uri")
 
 	if mongodb_uri == "" {
@@ -37,10 +33,7 @@ func ConnectDB() *mongo.Client {
 var client *mongo.Client = ConnectDB()
 
 func CollectionName(collectionName string) *mongo.Collection {
-	err := godotenv.Load(".env")
-	if err != nil {
-		fmt.Println(".env file not found!")
-	}
+
 	database_name := os.Getenv("database_name")
 
 	if database_name == "" {
