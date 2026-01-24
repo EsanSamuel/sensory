@@ -32,7 +32,7 @@ func Initialize_Log() {
 		port = "9000"
 	}
 
-	l, err := net.Listen("tcp", ":"+port)
+	l, err := net.Listen("tcp", ":10000")
 	if err != nil {
 		fmt.Println("Failed to start server:", err)
 		return
