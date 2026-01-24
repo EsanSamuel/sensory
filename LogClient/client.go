@@ -3,6 +3,7 @@ package logClient
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"runtime"
 	"time"
 
@@ -20,8 +21,9 @@ type Client struct {
 	noOp      bool
 }
 
-func New(apikey, addr string) (*Client, error) {
+func New(apikey string) (*Client, error) {
 	// Parse WebSocket URL
+	addr := os.Getenv("WEBSOCKET_URL")
 	u, err := url.Parse(addr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid URL: %w", err)
