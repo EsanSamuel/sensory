@@ -54,6 +54,9 @@ func main() {
 	r.GET("/log/:logId", controllers.GetLogById())
 	r.GET("/logs/project/:projectId", controllers.GetLogsByProject())
 
+	// WebSocket route for log ingestion (LogClient)
+	r.GET("/ws/logs", logserver.HandleWebSocketLogs)
+
 	// Use PORT from environment (Render requirement)
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -67,9 +70,6 @@ func main() {
 			log.Fatal("Error starting server:", err)
 		}
 	}()
-
-	// Start log server in goroutine
-	go logserver.Initialize_Log()
 
 	// Wait for shutdown signal
 	signalChan := make(chan os.Signal, 1)

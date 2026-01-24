@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/EsanSamuel/sensory/db"
 	"github.com/EsanSamuel/sensory/jobs/workers"
 	"github.com/EsanSamuel/sensory/models"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -32,39 +32,16 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func Initialize_Log() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "9000"
-	}
-
-	// WebSocket endpoint
-	http.HandleFunc("/logs", handleWebSocket)
-
-	// Health check endpoint
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
-
-	fmt.Println("WebSocket Log Server listening on port:", port)
-
-	err := http.ListenAndServe(":"+port, nil)
-	if err != nil {
-		fmt.Println("Failed to start server:", err)
-		return
-	}
-}
-
-func handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+// Gin handler for WebSocket
+func HandleWebSocketLogs(c *gin.Context) {
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("WebSocket upgrade error:", err)
 		return
 	}
 	defer conn.Close()
 
-	fmt.Println("Accepted connection from:", r.RemoteAddr)
+	fmt.Println("Accepted WebSocket connection from:", c.Request.RemoteAddr)
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -110,7 +87,11 @@ func PushLogToDB(entry *models.LogEntry) {
 	}).Decode(&existingLog)
 
 	if err == nil {
-		fmt.Println("Duplicate log detected, skipping. Message:", entry.Message[:50])
+		if len(entry.Message) > 50 {
+			fmt.Println("Duplicate log detected, skipping. Message:", entry.Message[:50])
+		} else {
+			fmt.Println("Duplicate log detected, skipping. Message:", entry.Message)
+		}
 		return
 	}
 
