@@ -17,7 +17,7 @@ type Client struct {
 	ApiKey    string
 	ProjectId string
 	UserId    string
-	noOp      bool // flag to mark dummy client
+	noOp      bool
 }
 
 func New(apikey, addr string) (*Client, error) {
