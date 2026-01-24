@@ -24,9 +24,14 @@ type Client struct {
 func New(apikey string) (*Client, error) {
 	// Parse WebSocket URL
 	addr := os.Getenv("WEBSOCKET_URL")
+	if addr == "" {
+		addr = "wss://sensory-6d32.onrender.com/ws/logs"
+		fmt.Println("WEBSOCKET_URL not set, using default:", addr)
+	}
+
 	u, err := url.Parse(addr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid URL: %w", err)
+		return nil, fmt.Errorf("invalid URL '%s': %w", addr, err)
 	}
 
 	// Connect via WebSocket
