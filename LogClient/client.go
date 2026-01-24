@@ -26,7 +26,7 @@ func New(apikey string) (*Client, error) {
 	addr := os.Getenv("WEBSOCKET_URL")
 	if addr == "" {
 		addr = "wss://sensory-6d32.onrender.com/ws/logs"
-		fmt.Println("WEBSOCKET_URL not set, using default:", addr)
+		//fmt.Println("WEBSOCKET_URL not set, using default:", addr)
 	}
 
 	u, err := url.Parse(addr)
