@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	"github.com/EsanSamuel/sensory/db"
@@ -26,7 +27,12 @@ type Log struct {
 }
 
 func Initialize_Log() {
-	l, err := net.Listen("tcp", ":9000")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "9000"
+	}
+
+	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		fmt.Println("Failed to start server:", err)
 		return
