@@ -1,18 +1,18 @@
 package logserver
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
+	"net"
 	"os"
 	"time"
 
 	"github.com/EsanSamuel/sensory/db"
 	"github.com/EsanSamuel/sensory/jobs/workers"
 	"github.com/EsanSamuel/sensory/models"
-	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -26,63 +26,54 @@ type Log struct {
 	UserID    string `json:"user_id"`
 }
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true // Allow all origins
-	},
-}
-
 func Initialize_Log() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "9000"
 	}
 
-	// WebSocket endpoint
-	http.HandleFunc("/logs", handleWebSocket)
-
-	// Health check endpoint
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
-
-	fmt.Println("WebSocket Log Server listening on port:", port)
-
-	err := http.ListenAndServe(":"+port, nil)
+	l, err := net.Listen("tcp", ":10000")
 	if err != nil {
 		fmt.Println("Failed to start server:", err)
 		return
 	}
-}
+	defer l.Close()
 
-func handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("WebSocket upgrade error:", err)
-		return
-	}
-	defer conn.Close()
-
-	fmt.Println("Accepted connection from:", r.RemoteAddr)
+	fmt.Println("TCP Log Server listening on :9000")
 
 	for {
-		_, message, err := conn.ReadMessage()
+		conn, err := l.Accept()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("WebSocket error: %v", err)
-			}
-			break
+			fmt.Println("Failed to accept connection:", err)
+			continue
 		}
 
+		go handleConn(conn)
+	}
+}
+
+func handleConn(conn net.Conn) {
+	defer conn.Close()
+	fmt.Println("Accepted connection from:", conn.RemoteAddr())
+
+	scanner := bufio.NewScanner(conn)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
 		var entry models.LogEntry
-		err = json.Unmarshal(message, &entry)
+		err := json.Unmarshal([]byte(line), &entry)
 		if err != nil {
 			log.Println("Failed to unmarshal:", err)
 			continue
 		}
 
 		PushLogToDB(&entry)
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Scanner error:", err)
 	}
 }
 
@@ -156,4 +147,5 @@ func PushLogToDB(entry *models.LogEntry) {
 	}
 
 	fmt.Println("saved log:", result)
+
 }
