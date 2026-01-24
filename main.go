@@ -28,15 +28,17 @@ func main() {
 
 	workers.EmailWorker()
 
+	// CORS configuration
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000", "https://sensory-frontend.vercel.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// Routes
 	r.GET("/hello", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "Welcome to sensory api"})
 	})
@@ -52,18 +54,28 @@ func main() {
 	r.GET("/log/:logId", controllers.GetLogById())
 	r.GET("/logs/project/:projectId", controllers.GetLogsByProject())
 
+	// Use PORT from environment (Render requirement)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000" // fallback for local development
+	}
+
+	// Start HTTP server in goroutine
 	go func() {
-		if err := r.Run(":8000"); err != nil {
-			log.Fatal("Error starting server", err)
+		fmt.Println("HTTP Server starting on port:", port)
+		if err := r.Run(":" + port); err != nil {
+			log.Fatal("Error starting server:", err)
 		}
 	}()
 
-	logserver.Initialize_Log()
+	// Start log server in goroutine
+	go logserver.Initialize_Log()
 
+	// Wait for shutdown signal
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 	<-signalChan
 
+	fmt.Println("Shutting down gracefully...")
 	workers.StopEmailWorker()
-	select {}
 }
