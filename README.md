@@ -92,3 +92,5 @@ sensory/
 *   **Godotenv**: For loading environment variables from `.env` files (`github.com/joho/godotenv`).
 *   **Go MongoDB Driver (indirect)**: Likely used for database interactions (`go.mongodb.org/mongo-driver/v2`).
 *   **GORM (indirect)**: An ORM library for Go, suggesting potential relational database integration (`gorm.io/gorm`).
+
+## Design and built by Esan Samuel
