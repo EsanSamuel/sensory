@@ -94,3 +94,4 @@ sensory/
 *   **GORM (indirect)**: An ORM library for Go, suggesting potential relational database integration (`gorm.io/gorm`).
 
 ## Design and built by Esan Samuel
+** Software Engineer
