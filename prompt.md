@@ -1,1 +1,1 @@
-ALSO TELL USERS WHAT THIS TOOL CAN BE USED FOR and give me a good description of the project to pitch
+ALSO TELL USERS WHAT THIS TOOL CAN BE USED FOR and give me a good description of the project to pitch. 
