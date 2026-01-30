@@ -28,7 +28,6 @@ func main() {
 
 	workers.EmailWorker()
 
-	// CORS configuration
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000", "https://sensory-frontend.vercel.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -38,7 +37,6 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// Routes
 	r.GET("/hello", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "Welcome to sensory api"})
 	})
@@ -54,16 +52,15 @@ func main() {
 	r.GET("/log/:logId", controllers.GetLogById())
 	r.GET("/logs/project/:projectId", controllers.GetLogsByProject())
 
-	// WebSocket route for log ingestion (LogClient)
 	r.GET("/ws/logs", logserver.HandleWebSocketLogs)
 
-	// Use PORT from environment (Render requirement)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8000" // fallback for local development
 	}
 
-	// Start HTTP server in goroutine
+
 	go func() {
 		fmt.Println("HTTP Server starting on port:", port)
 		if err := r.Run(":" + port); err != nil {
